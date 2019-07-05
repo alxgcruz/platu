@@ -1,0 +1,103 @@
+<!-- <form (ngSubmit)="guardar( f )" #f="ngForm"> -->
+<div class="row">
+    <div class="col-12">
+        <div class="form-group">
+            <label>Firebase ID</label>
+            <input type="text" class="form-control" placeholder="Firebase ID" name="id" [(ngModel)]="usuario.id" disabled="disabled">
+            <small class="form-text text-muted">Este campo es autogenerado</small>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-6">
+        <div class="form-group">
+            <label><b>Matrícula:</b></label>
+            <input type="text" class="form-control" name="matricula" [(ngModel)]="usuario.matricula" required>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="form-group">
+            <label><b>Contraseña: </b></label>
+            <input type="text" class="form-control" name="password" [(ngModel)]="usuario.password" required>
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <label><b>Nombre(s): </b></label>
+    <input type="text" class="form-control" name="nombre" [(ngModel)]="usuario.nombre">
+</div>
+<div class="row">
+    <div class="col-6">
+        <div class="form-group">
+            <label><b>Apellido Paterno: </b></label>
+            <input type="text" class="form-control" name="apPaterno" [(ngModel)]="usuario.apPaterno">
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="form-group">
+            <label><b>Apellido Materno: </b></label>
+            <input type="text" class="form-control" name="apMaterno" [(ngModel)]="usuario.apMaterno">
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="form-group">
+            <label><b>Curp: </b></label>
+            <input type="text" class="form-control" name="curp" [(ngModel)]="usuario.curp">
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-6">
+        <div class="form-group">
+            <label><b>Teléfono: </b></label>
+            <input type="text" class="form-control" name="telefono" [(ngModel)]="usuario.telefono">
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="form-group">
+            <label><b>Email: </b></label>
+            <input type="text" class="form-control" name="email" [(ngModel)]="usuario.email" required>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-4">
+        <div class="form-group">
+            <label><b>Abreviatura: </b></label>
+            <input type="text" class="form-control" name="abreviatura" [(ngModel)]="usuario.abreviatura">
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="form-group">
+            <label><b>Tipo: </b></label>
+            <select class="form-control" name="tipo" [(ngModel)]="usuario.tipo">
+                                        <option value=2>Administrativo</option>
+                                        <option value=3>Director de Carrera</option>
+                                        <option value=4>Tutor</option>
+                                        <option value=5>Docente</option>
+                                    </select>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="form-group">
+            <label>Tiempo Completo:</label><br>
+            <button *ngIf="usuario.tiempoCompleto" (click)="usuario.tiempoCompleto = false" class="btn btn-outline-success w-50" type="button">
+                                        <i class="fa fa-smile-wink"></i>
+                                        Si
+                                    </button>
+            <button *ngIf="!usuario.tiempoCompleto" (click)="usuario.tiempoCompleto = true" class="btn btn-outline-danger w-50" type="button">
+                                        <i class="fa fa-dizzy"></i>
+                                        No
+                                    </button>
+        </div>
+    </div>
+</div>
+<!-- <div class="form-group text-center">
+    <button type="submit" class="btn btn-primary w-25">
+                        <i class="fa fa-save"></i>
+                        Guardar
+                    </button>
+</div> -->
+<!-- </form> -->
