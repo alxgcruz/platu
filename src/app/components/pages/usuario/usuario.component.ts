@@ -20,7 +20,7 @@ export class UsuarioComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id') || null;
 
     if ( id !== 'nuevo' &&  id !== null) {
-      this.usuariosService.getUsuario( id )
+      this.usuariosService.getOneUsuario( id )
         .subscribe( (resp: UsuarioModel) => {
           console.log(resp);
           this.usuario = resp;

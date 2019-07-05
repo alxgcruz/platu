@@ -12,19 +12,18 @@ import { NgForm } from '@angular/forms';
 })
 export class UsuariosComponent implements OnInit {
 
-  usuarios: UsuarioModel[] = [];
-  cargando = false;
   usuario = new UsuarioModel();
+  usuarios: UsuarioModel[];
+  cargando = false;
 
   constructor( private usuariosService: UsuariosService ) { }
 
   ngOnInit() {
-
     this.cargando = true;
-    this.usuariosService.getUsuarios()
-    .subscribe( resp => {
+    this.usuariosService.getAllUsuarios().subscribe( usuarios => {
+      console.log(usuarios);
+      this.usuarios = usuarios;
       this.cargando = false;
-      this.usuarios = resp;
     });
   }
 
@@ -39,7 +38,7 @@ export class UsuariosComponent implements OnInit {
     }).then( resp => {
       if ( resp.value ) {
         this.usuarios.splice(i, 1);
-        this.usuariosService.borrarUsuario( usuario.id ).subscribe();
+        this.usuariosService.deleteUsuario( usuario.id );
       }
     });
 
@@ -65,22 +64,11 @@ export class UsuariosComponent implements OnInit {
     });
     Swal.showLoading();
 
-    let peticion: Observable<any>;
-
     if ( this.usuario.id ) {
-      peticion = this.usuariosService.actualizarUsuario( this.usuario );
+      this.usuariosService.updateUsuario( this.usuario );
     } else {
-      peticion = this.usuariosService.crearUsuario( this.usuario );
+      this.usuariosService.addUsuario( this.usuario );
     }
-
-    peticion.subscribe( resp => {
-      // $('#modelId').modal('hide');
-      Swal.fire({
-        type: 'success',
-        title: this.usuario.nombreCompleto,
-        text: 'Se actualizó correctamente'
-      });
-    });
 
   }
 

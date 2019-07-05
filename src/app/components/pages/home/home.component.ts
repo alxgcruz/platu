@@ -7,9 +7,16 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomeComponent implements OnInit {
 
+  usuario = { email: ''};
+  token = '';
+
   constructor(  ) { }
 
   ngOnInit() {
+    if ( localStorage.getItem('email') ) {
+      this.usuario.email = localStorage.getItem('email');
+      this.token = localStorage.getItem('token');
+    }
   }
 
 }

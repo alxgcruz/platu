@@ -2,58 +2,80 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { UsuarioModel } from '../models/usuario.model';
 import { map } from 'rxjs/operators';
+import { AngularFirestoreCollection, AngularFirestoreDocument, AngularFirestore } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import Swal from 'sweetalert2';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuariosService {
 
-  private url = 'https://platu-4ff2e.firebaseio.com';
+  private usuariosCollection: AngularFirestoreCollection<UsuarioModel>;
+  private usuarios: Observable<UsuarioModel[]>;
+  usuarioDoc: AngularFirestoreDocument<UsuarioModel>;
+  usuario: Observable<UsuarioModel>;
+  public selected: any = {
+    id: null
+  };
 
-  constructor( private http: HttpClient ) { }
-
-  crearUsuario( usuario: UsuarioModel ) {
-    return this.http.post(`${ this.url }/usuarios.json`, usuario )
-        .pipe(map( resp => {
-            // tslint:disable-next-line: no-string-literal
-            usuario.id = resp['name'];
-            return usuario;
-        }));
+  constructor( private afs: AngularFirestore, private auth: AuthService ) {
+    this.usuariosCollection = afs.collection<UsuarioModel>('usuarios');
+    this.usuarios = this.usuariosCollection.valueChanges();
   }
 
-  actualizarUsuario( usuario: UsuarioModel ) {
-    const userTemp = { ...usuario };
-
-    delete userTemp.id;
-
-    return this.http.put(`${ this.url }/usuarios/${ usuario.id }.json`, userTemp);
+  getAllUsuarios() {
+    return this.usuarios = this.usuariosCollection.snapshotChanges()
+    .pipe( map( cambios => {
+      return cambios.map( accion => {
+        const data = accion.payload.doc.data() as UsuarioModel;
+        data.id = accion.payload.doc.id;
+        return data;
+      });
+    }));
   }
 
-  getUsuarios() {
-    return this.http.get(`${ this.url }/usuarios.json`)
-        .pipe( map( this.crearArreglo ) );
+  getOneUsuario(idusuario: string) {
+    this.usuarioDoc = this.afs.doc<UsuarioModel>(`usuarios/${idusuario}`);
+    return this.usuario = this.usuarioDoc.snapshotChanges().pipe(map(action => {
+      if (action.payload.exists === false) {
+        return null;
+      } else {
+        const data = action.payload.data() as UsuarioModel;
+        data.id = action.payload.id;
+        return data;
+      }
+    }));
   }
 
-  private crearArreglo( usersObj: object ) {
-    const users: UsuarioModel[] = [];
-
-    if ( usersObj == null ) { return[]; }
-
-    Object.keys( usersObj ).forEach( key => {
-      const user: UsuarioModel = usersObj[ key ];
-      user.id = key;
-      users.push(user);
+  addUsuario(usuario: UsuarioModel): void {
+    this.usuariosCollection.add({...usuario}).then( resp => {
+      this.auth.registerUser(usuario.email, usuario.password);
+      Swal.fire({
+        type: 'success',
+        title: usuario.nombre,
+        text: 'Se agregó correctamente'
+      });
     });
-
-    return users;
   }
 
-  getUsuario( id: string ) {
-    return this.http.get(`${ this.url }/usuarios/${ id }.json`);
+  updateUsuario(usuario: UsuarioModel): void {
+    const idusuario = usuario.id;
+    this.usuarioDoc = this.afs.doc<UsuarioModel>(`usuarios/${idusuario}`);
+    this.usuarioDoc.update(usuario).then( resp => {
+      Swal.fire({
+        type: 'success',
+        title: usuario.nombre,
+        text: 'Se actualizó correctamente'
+      });
+    });
   }
 
-  borrarUsuario( id: string ) {
-    return this.http.delete(`${ this.url }/usuarios/${ id }.json`);
+  deleteUsuario(idusuario: string): void {
+    this.usuarioDoc = this.afs.doc<UsuarioModel>(`usuarios/${idusuario}`);
+    this.usuarioDoc.delete();
   }
+
 
 }

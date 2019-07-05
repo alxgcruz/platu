@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { UsuarioModel } from '../models/usuario.model';
 import { map } from 'rxjs/operators';
+import { AngularFireAuth } from '@angular/fire/auth';
+import { AngularFirestoreDocument, AngularFirestore } from '@angular/fire/firestore';
 
 
 @Injectable({
@@ -13,7 +15,7 @@ export class AuthService {
   private apiKey = 'AIzaSyCJPE8u9GjczvG4wpM_kw6K1E4VqBT0qag';
   userToken: string;
 
-  constructor( private http: HttpClient ) {
+  constructor( private http: HttpClient, private afsAuth: AngularFireAuth, private afs: AngularFirestore ) {
     this.leerToken();
   }
 
@@ -42,12 +44,32 @@ export class AuthService {
 
   }
 
+  registerUser(email: string, pass: string) {
+    return new Promise((resolve, reject) => {
+      this.afsAuth.auth.createUserWithEmailAndPassword(email, pass)
+        .then(userData => {
+          resolve(userData),
+            this.updateUserData(userData.user);
+        }).catch(err => console.log(reject(err)));
+    });
+  }
+
+  private updateUserData(user) {
+    const userRef: AngularFirestoreDocument<any> = this.afs.doc(`usuarios/${user.uid}`);
+    const data: UsuarioModel = {
+      id: user.uid,
+      email: user.email,
+      ...user
+    };
+    return userRef.set(data, { merge: true });
+  }
+
   private guardarToken( idToken: string ) {
 
     this.userToken = idToken;
     localStorage.setItem('token', idToken);
 
-    let hoy = new Date();
+    const hoy = new Date();
     hoy.setSeconds( 3600 );
 
     localStorage.setItem('expira', hoy.getTime().toString() );

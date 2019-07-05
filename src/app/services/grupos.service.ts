@@ -2,65 +2,77 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { GrupoModel } from '../models/grupo.model';
 import { map } from 'rxjs/operators';
+import { AngularFirestoreCollection, AngularFirestoreDocument, AngularFirestore } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GruposService {
 
-  private url = 'https://platu-4ff2e.firebaseio.com';
+  private gruposCollection: AngularFirestoreCollection<GrupoModel>;
+  private grupos: Observable<GrupoModel[]>;
+  grupoDoc: AngularFirestoreDocument<GrupoModel>;
+  grupo: Observable<GrupoModel>;
+  public selected: any = {
+    id: null
+  };
 
-  constructor( private http: HttpClient ) { }
-
-  crearGrupo( grupo: GrupoModel ) {
-
-    console.log('grupoService->', grupo);
-
-    return this.http.post(`${ this.url }/grupos.json`, grupo )
-        .pipe(map( resp => {
-            // tslint:disable-next-line: no-string-literal
-            grupo.id = resp['name'];
-            return grupo;
-        }));
+  constructor( private afs: AngularFirestore ) {
+    this.gruposCollection = afs.collection<GrupoModel>('grupos');
+    this.grupos = this.gruposCollection.valueChanges();
   }
 
-  actualizarGrupo( grupo: GrupoModel ) {
-
-    const groupTemp = { ...grupo };
-
-    delete groupTemp.id;
-
-    return this.http.put(`${ this.url }/grupos/${ grupo.id }.json`, groupTemp);
-
+  getAllGrupos() {
+    return this.grupos = this.gruposCollection.snapshotChanges()
+    .pipe( map( cambios => {
+      return cambios.map( accion => {
+        const data = accion.payload.doc.data() as GrupoModel;
+        data.id = accion.payload.doc.id;
+        return data;
+      });
+    }));
   }
 
-  getGrupos() {
-    return this.http.get(`${ this.url }/grupos.json`)
-        .pipe( map( this.crearArreglo ) );
+  getOneGrupo(idgrupo: string) {
+    this.grupoDoc = this.afs.doc<GrupoModel>(`grupos/${idgrupo}`);
+    return this.grupo = this.grupoDoc.snapshotChanges().pipe(map(action => {
+      if (action.payload.exists === false) {
+        return null;
+      } else {
+        const data = action.payload.data() as GrupoModel;
+        data.id = action.payload.id;
+        return data;
+      }
+    }));
   }
 
-  private crearArreglo( groupsObj: object ) {
-
-    const groups: GrupoModel[] = [];
-
-    if ( groupsObj == null ) { return[]; }
-
-    Object.keys( groupsObj ).forEach( key => {
-      const group: GrupoModel = groupsObj[ key ];
-      group.id = key;
-      groups.push(group);
+  addGrupo(grupo: GrupoModel): void {
+    this.gruposCollection.add({...grupo}).then( resp => {
+      Swal.fire({
+        type: 'success',
+        title: grupo.nombre,
+        text: 'Se agregó correctamente'
+      });
     });
-
-    return groups;
-
   }
 
-  getGrupo( id: string ) {
-    return this.http.get(`${ this.url }/grupos/${ id }.json`);
+  updateGrupo(grupo: GrupoModel): void {
+    const idgrupo = grupo.id;
+    this.grupoDoc = this.afs.doc<GrupoModel>(`grupos/${idgrupo}`);
+    this.grupoDoc.update(grupo).then( resp => {
+      Swal.fire({
+        type: 'success',
+        title: grupo.nombre,
+        text: 'Se actualizó correctamente'
+      });
+    });
   }
 
-  borrarGrupo( id: string ) {
-    return this.http.delete(`${ this.url }/grupos/${ id }.json`);
+  deleteGrupo(idgrupo: string): void {
+    this.grupoDoc = this.afs.doc<GrupoModel>(`grupos/${idgrupo}`);
+    this.grupoDoc.delete();
   }
 
 

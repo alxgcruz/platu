@@ -12,18 +12,18 @@ import { Observable } from 'rxjs';
 })
 export class CarrerasComponent implements OnInit {
 
-  carreras: CarreraModel[] = [];
-  cargando = false;
   carrera = new CarreraModel();
+  carreras: CarreraModel[];
+  cargando = false;
 
   constructor( private carrerasService: CarrerasService ) { }
 
   ngOnInit() {
     this.cargando = true;
-    this.carrerasService.getCarreras()
-    .subscribe( resp => {
+    this.carrerasService.getAllCarreras().subscribe( carreras => {
+      console.log(carreras);
+      this.carreras = carreras;
       this.cargando = false;
-      this.carreras = resp;
     });
   }
 
@@ -38,7 +38,7 @@ export class CarrerasComponent implements OnInit {
     }).then( resp => {
       if ( resp.value ) {
         this.carreras.splice(i, 1);
-        this.carrerasService.borrarCarrera( carrera.id ).subscribe();
+        this.carrerasService.deleteCarrera( carrera.id );
       }
     });
 
@@ -64,22 +64,11 @@ export class CarrerasComponent implements OnInit {
     });
     Swal.showLoading();
 
-    let peticion: Observable<any>;
-
     if ( this.carrera.id ) {
-      peticion = this.carrerasService.actualizarCarrera( this.carrera );
+      this.carrerasService.updateCarrera( this.carrera );
     } else {
-      peticion = this.carrerasService.crearCarrera( this.carrera );
+      this.carrerasService.addCarrera( this.carrera );
     }
-
-    peticion.subscribe( resp => {
-      // $('#modelId').modal('hide');
-      Swal.fire({
-        type: 'success',
-        title: this.carrera.nombre,
-        text: 'Se actualizó correctamente'
-      });
-    });
 
   }
 

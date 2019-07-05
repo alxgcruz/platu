@@ -3,9 +3,8 @@ import { GrupoModel } from 'src/app/models/grupo.model';
 import { GruposService } from 'src/app/services/grupos.service';
 import Swal from 'sweetalert2';
 import { NgForm } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { CarreraModel } from 'src/app/models/carrera.model';
 import { CarrerasService } from 'src/app/services/carreras.service';
+import { CarreraModel } from 'src/app/models/carrera.model';
 
 @Component({
   selector: 'app-grupos',
@@ -14,78 +13,23 @@ import { CarrerasService } from 'src/app/services/carreras.service';
 })
 export class GruposComponent implements OnInit {
 
+  grupo = new GrupoModel();
+  grupos: GrupoModel[];
+  cargando = false;
+  carreras: CarreraModel[];
+  carrera = new CarreraModel();
+
   constructor( private gruposService: GruposService, private carrerasService: CarrerasService ) { }
 
-  grupo   = new GrupoModel();
-  grupos: GrupoModel[] = [];
-  carrera = new CarreraModel();
-  carreras: CarreraModel[] = [];
-  cargando = false;
-
-
   ngOnInit() {
-
     this.cargando = true;
-    this.cargaCarreras();
-    this.cargaGrupos();
+    this.cargarCarreras();
 
-  }
-
-  abrirModal( group? ) {
-
-    if ( group ) {
-      this.grupo = group;
-      this.carrera = this.carreras.find( item => {
-        return item.id === this.grupo.carrera;
-      });
-    } else {
-      this.grupo = new GrupoModel();
-      this.carrera = this.carreras[0];
-    }
-
-  }
-
-  guardar( form: NgForm ) {
-
-    if ( form.invalid ) { return; }
-
-    Swal.fire({
-      allowOutsideClick: false,
-      type: 'info',
-      title: 'Espere',
-      text: 'Guardando Información'
+    this.gruposService.getAllGrupos().subscribe( grupos => {
+      console.log(grupos);
+      this.grupos = grupos;
+      this.cargando = false;
     });
-    Swal.showLoading();
-
-    this.grupo.carrera = this.carrera.id;
-
-    if ( this.grupo.id ) {
-      this.gruposService.actualizarGrupo( this.grupo )
-      .subscribe( resp => {
-
-        Swal.fire({
-          type: 'success',
-          title: this.grupo.nombre,
-          text: 'Se actualizó correctamente'
-        });
-
-      });
-    } else {
-      this.gruposService.crearGrupo( this.grupo )
-      .subscribe( resp => {
-
-        Swal.fire({
-          type: 'success',
-          title: this.grupo.nombre,
-          text: 'Se guardó correctamente'
-        });
-
-        this.grupos.push( resp );
-
-      });
-    }
-
-
   }
 
   borrarGrupo( grupo: GrupoModel, i: number ) {
@@ -99,27 +43,52 @@ export class GruposComponent implements OnInit {
     }).then( resp => {
       if ( resp.value ) {
         this.grupos.splice(i, 1);
-        this.gruposService.borrarGrupo( grupo.id ).subscribe();
+        this.gruposService.deleteGrupo( grupo.id );
       }
     });
 
   }
 
-
-  async cargaGrupos() {
-    await this.gruposService.getGrupos()
-    .subscribe( resp => {
-      this.cargando = false;
-      this.grupos = resp;
-    });
+  abrirModal( group? ) {
+    if ( group ) {
+      this.grupo = group;
+      this.carrera = this.carreras.find( (item: CarreraModel) => {
+        return item.id === this.grupo.carrera;
+      });
+    } else {
+      this.grupo = new GrupoModel();
+      this.carrera = this.carreras[0];
+    }
   }
 
-  async cargaCarreras() {
-    await this.carrerasService.getCarreras()
-      .subscribe( resp => {
-        this.carreras = resp;
-        this.carrera = this.carreras[0];
-      });
+  guardar( form: NgForm ) {
+
+    if ( form.invalid ) { return; }
+
+
+    this.grupo.carrera = this.carrera.id;
+
+    Swal.fire({
+      allowOutsideClick: false,
+      type: 'info',
+      title: 'Espere',
+      text: 'Guardando Información'
+    });
+    Swal.showLoading();
+
+    if ( this.grupo.id ) {
+      this.gruposService.updateGrupo( this.grupo );
+    } else {
+      this.gruposService.addGrupo( this.grupo );
+    }
+
+  }
+
+  async cargarCarreras() {
+    await this.carrerasService.getAllCarreras().subscribe( carreras => {
+      console.log(carreras);
+      this.carreras = carreras;
+    });
   }
 
 }
